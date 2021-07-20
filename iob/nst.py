@@ -132,7 +132,6 @@ def vis_tensor_grid(tensor, save_path):
 
 
 def content_loss(content, combination):
-    # return tf.reduce_mean(tf.square(combination - content))
     return 0.5 * tf.reduce_sum(tf.square(combination - content))
 
 
@@ -155,7 +154,6 @@ def gram_matrix(features, normalize=True):
     feature_maps = tf.reshape(features, (-1, channel))
     gram = tf.matmul(tf.transpose(feature_maps), feature_maps)
     if normalize:
-        # gram = tf.divide(gram, tf.cast(height * width, gram.dtype))
         gram = tf.divide(gram, tf.cast(2.0 * height * width * channel, gram.dtype))
 
     return gram
@@ -164,7 +162,6 @@ def gram_matrix(features, normalize=True):
 def style_loss(style, combination):
     style_gram = gram_matrix(style, normalize=True)
     combination_gram = gram_matrix(combination, normalize=True)
-    # return tf.reduce_mean(tf.square(style_gram - combination_gram))
     return tf.reduce_sum(tf.square(style_gram - combination_gram))
 
 
@@ -186,7 +183,7 @@ def total_variation_loss(image):
     img_col_end = tf.slice(image, [0, 1, 0], [height, width - 1, channel])
     img_row_start = tf.slice(image, [0, 0, 0], [height - 1, width, channel])
     img_row_end = tf.slice(image, [1, 0, 0], [height - 1, width, channel])
-    return tf.reduce_mean(tf.square(img_col_end - img_col_start)) + tf.reduce_mean(tf.square(img_row_end - img_row_start))
+    return tf.reduce_sum(tf.square(img_col_end - img_col_start)) + tf.reduce_sum(tf.square(img_row_end - img_row_start))
 
 
 def compute_loss(feature_extractor,
