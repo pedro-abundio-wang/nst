@@ -28,6 +28,7 @@ dependencies:
     - cachetools==4.2.2
     - charset-normalizer==2.0.3
     - cycler==0.10.0
+    - cython==0.29.24
     - flatbuffers==1.12
     - gast==0.3.3
     - google-auth==1.33.0
@@ -48,6 +49,7 @@ dependencies:
     - protobuf==3.17.3
     - pyasn1==0.4.8
     - pyasn1-modules==0.2.8
+    - pycocotools==2.0.2
     - pyparsing==2.4.7
     - python-dateutil==2.8.2
     - requests==2.26.0
