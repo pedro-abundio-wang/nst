@@ -42,7 +42,7 @@ def pipeline(dataset: tf.data.Dataset) -> tf.data.Dataset:
     dataset = dataset.interleave(
         lambda name: tf.data.TFRecordDataset(name, buffer_size=buffer_size),
         cycle_length=16,
-        num_parallel_calls=tf.data.AUTOTUNE)
+        num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
     dataset = dataset.prefetch(batch_size)
 
@@ -51,7 +51,7 @@ def pipeline(dataset: tf.data.Dataset) -> tf.data.Dataset:
 
 
     # Parse, pre-process, and batch the data in parallel
-    dataset = dataset.map(parse_record, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.map(parse_record, num_parallel_calls=tf.data.experimental.AUTOTUNE)
     dataset = dataset.batch(batch_size, drop_remainder=True)
 
     # Note: we could do image normalization here, but we defer it to the model
