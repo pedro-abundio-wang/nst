@@ -8,7 +8,9 @@ from mob.pspm.style_network import preprocessing
 
 
 def build(data_dir, split) -> tf.data.Dataset:
-    return load_records(data_dir, split)
+    dataset = load_records(data_dir, split)
+    dataset = pipeline(dataset)
+    return dataset
 
 
 def load_records(data_dir, split) -> tf.data.Dataset:

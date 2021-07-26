@@ -222,7 +222,7 @@ def neural_style_transfer(transformation_model,
     max_vals = 255 - norm_means
 
     for i in range(iterations):
-        content_image = next(iter(dataset))
+        content_image = next(iter(dataset))[0]
         combination_image = transformation_model(content_image)
         loss, c_loss, s_loss, v_loss, grads = compute_loss_and_grads(
             transformation_model,
@@ -256,7 +256,7 @@ def neural_style_transfer(transformation_model,
 
 def run():
     params = {
-        'content_image_path': '/home/pedro/datasets/coco',
+        'coco_tfrecord_path': '/home/pedro/datasets/coco',
         'style_image_path': 'The_Great_Wave_off_Kanagawa.jpg',
         'content_layer_name': 'block2_conv2',
         'content_weight': 1,
@@ -268,8 +268,7 @@ def run():
         ],
         'style_weight': 1e3,
         'total_variation_weight': 0,
-        'result_prefix': 'nst',
-        'init_random': False
+        'result_prefix': 'nst'
     }
     transformation_model = transformation_network()
     loss_model = loss_network()

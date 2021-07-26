@@ -59,7 +59,7 @@ def residual_block(input_tensor,
         filters=filters,
         kernel_size=3,
         strides=1,
-        padding='same',
+        padding='valid',
         kernel_initializer='he_normal')(input_tensor)
     x = layers.BatchNormalization(
         axis=bn_axis)(x)
@@ -69,12 +69,12 @@ def residual_block(input_tensor,
         filters=filters,
         kernel_size=3,
         strides=1,
-        padding='same',
+        padding='valid',
         kernel_initializer='he_normal')(x)
     x = layers.BatchNormalization(
         axis=bn_axis)(x)
 
-    x = layers.add([x, input_tensor])
+    x = layers.add([x, input_tensor[:, 2:-2, 2:-2, :]])
 
     return x
 
