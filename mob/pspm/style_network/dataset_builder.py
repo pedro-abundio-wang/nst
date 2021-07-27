@@ -33,7 +33,7 @@ def pipeline(dataset: tf.data.Dataset) -> tf.data.Dataset:
       A TensorFlow dataset outputting batched images and labels.
     """
 
-    batch_size = 1
+    batch_size = 4
     shuffle_buffer_size = 10000
     num_devices = 1
 

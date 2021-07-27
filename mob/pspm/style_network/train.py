@@ -12,13 +12,12 @@ from __future__ import print_function
 from absl import app
 from absl import logging
 
+import os
 import numpy as np
-import matplotlib.pyplot as plt
 from PIL import Image
 
 import tensorflow as tf
 
-from tensorflow.keras import models
 from tensorflow.keras import optimizers
 from tensorflow.keras import applications
 from tensorflow.keras import preprocessing
@@ -40,11 +39,16 @@ def load_image(path_to_image):
     return image
 
 
+def preprocess_image(images):
+    images = applications.vgg19.preprocess_input(images)
+    return images
+
+
 def load_and_preprocess_image(path_to_image):
     # Util function to open, resize and format pictures into appropriate tensors
-    image = load_image(path_to_image)
-    image = applications.vgg19.preprocess_input(image)
-    return tf.convert_to_tensor(image)
+    images = load_image(path_to_image)
+    images = preprocess_image(images)
+    return tf.convert_to_tensor(images)
 
 
 def deprocess_image(processed_img):
@@ -197,48 +201,66 @@ def compute_loss_and_grads(transformation_model,
     return loss, c_loss, s_loss, v_loss, grads
 
 
-def neural_style_transfer(transformation_model,
-                          feature_extractor,
-                          coco_tfrecord_path,
-                          style_image_path,
-                          content_layer_name,
-                          content_weight,
-                          style_layer_names,
-                          style_weight,
-                          total_variation_weight,
-                          result_prefix):
+def train(transformation_model,
+          feature_extractor,
+          coco_tfrecord_path,
+          style_image_path,
+          content_layer_name,
+          content_weight,
+          style_layer_names,
+          style_weight,
+          total_variation_weight,
+          result_prefix):
 
-    optimizer = optimizers.Adam(learning_rate=10)
+    lr_schedule = optimizers.schedules.ExponentialDecay(
+        initial_learning_rate=10,
+        decay_steps=10000,
+        decay_rate=0.9)
+    optimizer = optimizers.Adam(learning_rate=lr_schedule)
 
     dataset = dataset_builder.build(coco_tfrecord_path, 'train')
 
     style_image = load_and_preprocess_image(style_image_path)
 
-    iterations = 1000
+    iterations = 80000 * 2
     # Store our best result
     best_loss, best_img = float('inf'), None
     norm_means = np.array([103.939, 116.779, 123.68])
     min_vals = -norm_means
     max_vals = 255 - norm_means
 
+    # metrics
+    loss_metric = tf.keras.metrics.Mean()
+    closs_metric = tf.keras.metrics.Mean()
+    sloss_metric = tf.keras.metrics.Mean()
+    vloss_metric = tf.keras.metrics.Mean()
+
+    # tensorboard
+    logdir = "./tb/"
+    writer = tf.summary.create_file_writer(logdir)
+    writer.set_as_default()
+
     for i in range(iterations):
-        content_image = next(iter(dataset))[0]
-        combination_image = transformation_model(content_image)
-        loss, c_loss, s_loss, v_loss, grads = compute_loss_and_grads(
-            transformation_model,
-            feature_extractor,
-            combination_image,
-            content_image,
-            style_image,
-            content_layer_name,
-            content_weight,
-            style_layer_names,
-            style_weight,
-            total_variation_weight)
-        optimizer.apply_gradients([(grads, transformation_model.trainable_variables)])
+        content_image, _ = next(iter(dataset))
+        content_image = preprocess_image(content_image)
+        loss, c_loss, s_loss, v_loss, combination_image = train_step(optimizer,
+                                                                     transformation_model,
+                                                                     feature_extractor,
+                                                                     content_image,
+                                                                     style_image,
+                                                                     content_layer_name,
+                                                                     content_weight,
+                                                                     style_layer_names,
+                                                                     style_weight,
+                                                                     total_variation_weight)
         # clipping the image y to the range [0, 255] at each iteration
         clipped = tf.clip_by_value(combination_image, min_vals, max_vals)
-        combination_image.assign(clipped)
+        combination_image = clipped
+
+        loss_metric(loss)
+        closs_metric(c_loss)
+        sloss_metric(s_loss)
+        vloss_metric(v_loss)
 
         if loss < best_loss:
             # Update best loss and best image from total loss.
@@ -246,12 +268,52 @@ def neural_style_transfer(transformation_model,
             best_img = deprocess_image(combination_image.numpy())
             preprocessing.image.save_img("best.png", best_img)
 
-        if i % 100 == 0:
+        if i % 1000 == 0:
             logging.info("Iteration %d: total_loss=%.4e, content_loss=%.4e, style_loss=%.4e, variation_loss=%.4e"
                          % (i, loss, c_loss, s_loss, v_loss))
             img = deprocess_image(combination_image.numpy())
             fname = "%s_iteration_%d.png" % (result_prefix, i)
             preprocessing.image.save_img(fname, img)
+
+            tf.summary.scalar('loss', loss, step=i)
+            tf.summary.scalar('c_loss', c_loss, step=i)
+            tf.summary.scalar('s_loss', s_loss, step=i)
+            tf.summary.scalar('v_loss', v_loss, step=i)
+
+            checkpoint_path = './ckpt/'
+            if not os.path.exists(checkpoint_path):
+                os.makedirs(checkpoint_path)
+            checkpoint = tf.train.Checkpoint(optimizer=optimizer, model=transformation_model)
+            checkpoint.save(checkpoint_path)
+            # checkpoint.restore(tf.train.latest_checkpoint(checkpoint_path))
+
+
+@tf.function
+def train_step(optimizer,
+               transformation_model,
+               feature_extractor,
+               content_image,
+               style_image,
+               content_layer_name,
+               content_weight,
+               style_layer_names,
+               style_weight,
+               total_variation_weight):
+    # train step
+    combination_image = transformation_model(content_image)
+    loss, c_loss, s_loss, v_loss, grads = compute_loss_and_grads(
+        transformation_model,
+        feature_extractor,
+        combination_image,
+        content_image,
+        style_image,
+        content_layer_name,
+        content_weight,
+        style_layer_names,
+        style_weight,
+        total_variation_weight)
+    optimizer.apply_gradients([(grads, transformation_model.trainable_variables)])
+    return loss, c_loss, s_loss, v_loss, combination_image
 
 
 def run():
@@ -272,7 +334,7 @@ def run():
     }
     transformation_model = transformation_network()
     loss_model = loss_network()
-    neural_style_transfer(transformation_model, loss_model, **params)
+    train(transformation_model, loss_model, **params)
 
 
 def main(_):
