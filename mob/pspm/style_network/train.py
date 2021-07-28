@@ -254,7 +254,7 @@ def train(transformation_model,
           style_weight,
           total_variation_weight):
 
-    optimizer = optimizers.Adam(learning_rate=1e-3)
+    optimizer = optimizers.Adam(learning_rate=10)
 
     dataset = dataset_builder.build(coco_tfrecord_path, 'train')
 
@@ -293,7 +293,7 @@ def train(transformation_model,
         sloss_metric(s_loss)
         vloss_metric(v_loss)
 
-        if i % 1000 == 0:
+        if i % 100 == 0:
             logging.info("Iteration %d: total_loss=%.4e, content_loss=%.4e, style_loss=%.4e, variation_loss=%.4e"
                          % (i, loss, c_loss, s_loss, v_loss))
 
