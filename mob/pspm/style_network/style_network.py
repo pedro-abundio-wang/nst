@@ -210,4 +210,6 @@ def loss_network():
     # model (as a dict).
     feature_extractor = models.Model(inputs=model.inputs, outputs=outputs_dict)
 
+    model.summary()
+
     return feature_extractor

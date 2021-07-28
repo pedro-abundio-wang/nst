@@ -31,8 +31,8 @@ def load_image(path_to_image):
     max_dim = 512
     image = Image.open(path_to_image)
     long = max(image.size)
-    scale = max_dim/long
-    image = image.resize((round(image.size[0]*scale), round(image.size[1]*scale)), Image.ANTIALIAS)
+    scale = max_dim / long
+    image = image.resize((round(image.size[0] * scale), round(image.size[1] * scale)), Image.ANTIALIAS)
     image = preprocessing.image.img_to_array(image)
     # We need to broadcast the image array such that it has a batch dimension
     image = np.expand_dims(image, axis=0)
@@ -73,7 +73,7 @@ def deprocess_image(processed_img):
 
 
 def content_loss(content, combination):
-    return 0.5 * tf.reduce_sum(tf.square(combination - content))
+    return 0.5 * tf.reduce_sum(tf.square(content - combination))
 
 
 def gram_matrix(features, normalize=True):
@@ -127,19 +127,28 @@ def total_variation_loss(image):
     return tf.reduce_sum(tf.square(img_col_end - img_col_start)) + tf.reduce_sum(tf.square(img_row_end - img_row_start))
 
 
-def compute_loss(feature_extractor,
-                 combination_image,
-                 content_image,
+def compute_loss(transformation_model,
+                 loss_model,
+                 content_images,
                  style_image,
                  content_layer_name,
                  content_weight,
                  style_layer_names,
                  style_weight,
                  total_variation_weight):
+    """
+    Inputs:
+    - combination_images: Tensor of shape (batch_size, height, width, channel).
+    - content_images: Tensor of shape (batch_size, height, width, channel).
+    - style_image: Tensor of shape (1, height, width, channel).
+    """
+    content_features = loss_model(content_images)
+    style_features = loss_model(style_image)
+    combination_images = transformation_model(content_images)
+    combination_features = loss_model(combination_images)
 
-    content_features = feature_extractor(content_image)
-    style_features = feature_extractor(style_image)
-    combination_features = feature_extractor(combination_image)
+    assert content_features.shape == combination_features.shape
+    batch_size = content_features.shape[0]
 
     # Initialize the loss
     loss = tf.zeros(shape=())
@@ -149,22 +158,29 @@ def compute_loss(feature_extractor,
 
     # content loss
     if content_layer_name is not None:
-        content_layer_features = content_features[content_layer_name]
-        combination_layer_features = combination_features[content_layer_name]
-        c_loss += content_loss(content_layer_features, combination_layer_features)
-        c_loss *= content_weight
+        for i in range(batch_size):
+            content_layer_features = content_features[i][content_layer_name]
+            combination_layer_features = content_features[i][content_layer_name]
+            c_loss += content_weight * content_loss(content_layer_features, combination_layer_features)
+
+        c_loss /= batch_size
 
     # style loss
     if style_layer_names is not None:
-        weight_per_style_layer = 1.0 / float(len(style_layer_names))
-        for i, style_layer_name in enumerate(style_layer_names):
-            style_layer_features = style_features[style_layer_name]
-            combination_layer_features = combination_features[style_layer_name]
-            s_loss += weight_per_style_layer * style_loss(style_layer_features, combination_layer_features)
-        s_loss *= style_weight
+        for i in range(batch_size):
+            weight_per_style_layer = 1.0 / float(len(style_layer_names))
+            for _, style_layer_name in enumerate(style_layer_names):
+                style_layer_features = style_features[style_layer_name]
+                combination_layer_features = combination_features[i][style_layer_name]
+                s_loss += style_weight * weight_per_style_layer * style_loss(style_layer_features, combination_layer_features)
+
+        s_loss /= batch_size
 
     # total variation loss
-    v_loss += total_variation_weight * total_variation_loss(combination_image)
+    for i in range(batch_size):
+        v_loss += total_variation_weight * total_variation_loss(combination_images[i])
+
+    v_loss /= batch_size
 
     # total loss
     loss += c_loss + s_loss + v_loss
@@ -173,9 +189,8 @@ def compute_loss(feature_extractor,
 
 
 def compute_loss_and_grads(transformation_model,
-                           feature_extractor,
-                           combination_image,
-                           content_image,
+                           loss_model,
+                           content_images,
                            style_image,
                            content_layer_name,
                            content_weight,
@@ -187,9 +202,9 @@ def compute_loss_and_grads(transformation_model,
     To compile it, and thus make it fast.
     """
     with tf.GradientTape() as tape:
-        loss, c_loss, s_loss, v_loss = compute_loss(feature_extractor,
-                                                    combination_image,
-                                                    content_image,
+        loss, c_loss, s_loss, v_loss = compute_loss(transformation_model,
+                                                    loss_model,
+                                                    content_images,
                                                     style_image,
                                                     content_layer_name,
                                                     content_weight,
@@ -201,8 +216,34 @@ def compute_loss_and_grads(transformation_model,
     return loss, c_loss, s_loss, v_loss, grads
 
 
+@tf.function
+def train_step(optimizer,
+               transformation_model,
+               loss_model,
+               content_images,
+               style_image,
+               content_layer_name,
+               content_weight,
+               style_layer_names,
+               style_weight,
+               total_variation_weight):
+    # train step
+    loss, c_loss, s_loss, v_loss, grads = compute_loss_and_grads(
+        transformation_model,
+        loss_model,
+        content_images,
+        style_image,
+        content_layer_name,
+        content_weight,
+        style_layer_names,
+        style_weight,
+        total_variation_weight)
+    optimizer.apply_gradients([(grads, transformation_model.trainable_variables)])
+    return loss, c_loss, s_loss, v_loss
+
+
 def train(transformation_model,
-          feature_extractor,
+          loss_model,
           coco_tfrecord_path,
           style_image_path,
           content_layer_name,
@@ -211,7 +252,6 @@ def train(transformation_model,
           style_weight,
           total_variation_weight,
           result_prefix):
-
     lr_schedule = optimizers.schedules.ExponentialDecay(
         initial_learning_rate=10,
         decay_steps=10000,
@@ -241,39 +281,28 @@ def train(transformation_model,
     writer.set_as_default()
 
     for i in range(iterations):
-        content_image, _ = next(iter(dataset))
-        content_image = preprocess_image(content_image)
-        loss, c_loss, s_loss, v_loss, combination_image = train_step(optimizer,
-                                                                     transformation_model,
-                                                                     feature_extractor,
-                                                                     content_image,
-                                                                     style_image,
-                                                                     content_layer_name,
-                                                                     content_weight,
-                                                                     style_layer_names,
-                                                                     style_weight,
-                                                                     total_variation_weight)
-        # clipping the image y to the range [0, 255] at each iteration
-        clipped = tf.clip_by_value(combination_image, min_vals, max_vals)
-        combination_image = clipped
+        content_images, _ = next(iter(dataset))
+        content_images = preprocess_image(content_images)
+        loss, c_loss, s_loss, v_loss = train_step(optimizer,
+                                                  transformation_model,
+                                                  loss_model,
+                                                  content_images,
+                                                  style_image,
+                                                  content_layer_name,
+                                                  content_weight,
+                                                  style_layer_names,
+                                                  style_weight,
+                                                  total_variation_weight)
 
+        # metrics
         loss_metric(loss)
         closs_metric(c_loss)
         sloss_metric(s_loss)
         vloss_metric(v_loss)
 
-        if loss < best_loss:
-            # Update best loss and best image from total loss.
-            best_loss = loss
-            best_img = deprocess_image(combination_image.numpy())
-            preprocessing.image.save_img("best.png", best_img)
-
         if i % 1000 == 0:
             logging.info("Iteration %d: total_loss=%.4e, content_loss=%.4e, style_loss=%.4e, variation_loss=%.4e"
                          % (i, loss, c_loss, s_loss, v_loss))
-            img = deprocess_image(combination_image.numpy())
-            fname = "%s_iteration_%d.png" % (result_prefix, i)
-            preprocessing.image.save_img(fname, img)
 
             tf.summary.scalar('loss', loss, step=i)
             tf.summary.scalar('c_loss', c_loss, step=i)
@@ -286,34 +315,6 @@ def train(transformation_model,
             checkpoint = tf.train.Checkpoint(optimizer=optimizer, model=transformation_model)
             checkpoint.save(checkpoint_path)
             # checkpoint.restore(tf.train.latest_checkpoint(checkpoint_path))
-
-
-@tf.function
-def train_step(optimizer,
-               transformation_model,
-               feature_extractor,
-               content_image,
-               style_image,
-               content_layer_name,
-               content_weight,
-               style_layer_names,
-               style_weight,
-               total_variation_weight):
-    # train step
-    combination_image = transformation_model(content_image)
-    loss, c_loss, s_loss, v_loss, grads = compute_loss_and_grads(
-        transformation_model,
-        feature_extractor,
-        combination_image,
-        content_image,
-        style_image,
-        content_layer_name,
-        content_weight,
-        style_layer_names,
-        style_weight,
-        total_variation_weight)
-    optimizer.apply_gradients([(grads, transformation_model.trainable_variables)])
-    return loss, c_loss, s_loss, v_loss, combination_image
 
 
 def run():
