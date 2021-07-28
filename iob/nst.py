@@ -499,7 +499,7 @@ def nst(feature_extractor):
         'content_image_path': 'Green_Sea_Turtle_grazing_seagrass.jpg',
         'style_image_path': 'The_Great_Wave_off_Kanagawa.jpg',
         'content_layer_name': 'block4_conv2',
-        'content_weight': 1,
+        'content_weight': 1e-3,
         'style_layer_names': [
             "block1_conv1",
             "block2_conv1",
@@ -507,7 +507,7 @@ def nst(feature_extractor):
             "block4_conv1",
             "block5_conv1",
         ],
-        'style_weight': 1e3,
+        'style_weight': 1e0,
         'total_variation_weight': 0,
         'result_prefix': 'nst',
         'init_random': False
