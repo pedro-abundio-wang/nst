@@ -147,8 +147,9 @@ def compute_loss(transformation_model,
     combination_images = transformation_model(content_images)
     combination_features = loss_model(combination_images)
 
-    assert content_features.shape == combination_features.shape
-    batch_size = content_features.shape[0]
+    assert content_images.shape == combination_images.shape
+    batch_size = content_images.shape[0]
+    assert batch_size == 4
 
     # Initialize the loss
     loss = tf.zeros(shape=())
@@ -159,8 +160,8 @@ def compute_loss(transformation_model,
     # content loss
     if content_layer_name is not None:
         for i in range(batch_size):
-            content_layer_features = content_features[i][content_layer_name]
-            combination_layer_features = content_features[i][content_layer_name]
+            content_layer_features = content_features[content_layer_name][i:i+1]
+            combination_layer_features = combination_features[content_layer_name][i:i+1]
             c_loss += content_weight * content_loss(content_layer_features, combination_layer_features)
 
         c_loss /= batch_size
@@ -171,14 +172,14 @@ def compute_loss(transformation_model,
             weight_per_style_layer = 1.0 / float(len(style_layer_names))
             for _, style_layer_name in enumerate(style_layer_names):
                 style_layer_features = style_features[style_layer_name]
-                combination_layer_features = combination_features[i][style_layer_name]
+                combination_layer_features = combination_features[style_layer_name][i:i+1]
                 s_loss += style_weight * weight_per_style_layer * style_loss(style_layer_features, combination_layer_features)
 
         s_loss /= batch_size
 
     # total variation loss
     for i in range(batch_size):
-        v_loss += total_variation_weight * total_variation_loss(combination_images[i])
+        v_loss += total_variation_weight * total_variation_loss(combination_images[i:i+1])
 
     v_loss /= batch_size
 
