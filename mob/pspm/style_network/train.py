@@ -254,7 +254,7 @@ def train(transformation_model,
           style_weight,
           total_variation_weight):
 
-    optimizer = optimizers.Adam(learning_rate=10)
+    optimizer = optimizers.Adam(learning_rate=1)
 
     dataset = dataset_builder.build(coco_tfrecord_path, 'train')
 
