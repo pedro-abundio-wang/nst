@@ -144,6 +144,7 @@ def compute_loss(transformation_model,
     """
     content_features = loss_model(content_images)
     style_features = loss_model(style_image)
+    # random_images = tf.Variable(tf.random.uniform(content_images.shape))
     combination_images = transformation_model(content_images)
     combination_features = loss_model(combination_images)
 
@@ -239,7 +240,7 @@ def train_step(optimizer,
         style_layer_names,
         style_weight,
         total_variation_weight)
-    optimizer.apply_gradients([(grads, transformation_model.trainable_variables)])
+    optimizer.apply_gradients(zip(grads, transformation_model.trainable_variables))
     return loss, c_loss, s_loss, v_loss
 
 
@@ -251,24 +252,15 @@ def train(transformation_model,
           content_weight,
           style_layer_names,
           style_weight,
-          total_variation_weight,
-          result_prefix):
-    lr_schedule = optimizers.schedules.ExponentialDecay(
-        initial_learning_rate=10,
-        decay_steps=10000,
-        decay_rate=0.9)
-    optimizer = optimizers.Adam(learning_rate=lr_schedule)
+          total_variation_weight):
+
+    optimizer = optimizers.Adam(learning_rate=1e-3)
 
     dataset = dataset_builder.build(coco_tfrecord_path, 'train')
 
     style_image = load_and_preprocess_image(style_image_path)
 
-    iterations = 80000 * 2
-    # Store our best result
-    best_loss, best_img = float('inf'), None
-    norm_means = np.array([103.939, 116.779, 123.68])
-    min_vals = -norm_means
-    max_vals = 255 - norm_means
+    iterations = 40000
 
     # metrics
     loss_metric = tf.keras.metrics.Mean()
@@ -323,16 +315,15 @@ def run():
         'coco_tfrecord_path': '/home/pedro/datasets/coco',
         'style_image_path': 'The_Great_Wave_off_Kanagawa.jpg',
         'content_layer_name': 'block2_conv2',
-        'content_weight': 1,
+        'content_weight': 1e-3,
         'style_layer_names': [
             "block1_conv2",
             "block2_conv2",
             "block3_conv3",
             "block4_conv3"
         ],
-        'style_weight': 1e3,
-        'total_variation_weight': 0,
-        'result_prefix': 'nst'
+        'style_weight': 1e0,
+        'total_variation_weight': 1e-5
     }
     transformation_model = transformation_network()
     loss_model = loss_network()
