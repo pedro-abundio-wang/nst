@@ -13,7 +13,9 @@ from absl import app
 from absl import logging
 
 import os
+import traceback
 import numpy as np
+
 from PIL import Image
 
 import tensorflow as tf
@@ -149,8 +151,7 @@ def compute_loss(transformation_model,
     combination_features = loss_model(combination_images)
 
     assert content_images.shape == combination_images.shape
-    batch_size = content_images.shape[0]
-    assert batch_size == 4
+    batch_size, _, _, _ = content_images.shape
 
     # Initialize the loss
     loss = tf.zeros(shape=())
@@ -274,7 +275,11 @@ def train(transformation_model,
     writer.set_as_default()
 
     for i in range(iterations):
-        content_images, _ = next(iter(dataset))
+        try:
+            content_images, _ = next(iter(dataset))
+        except tf.errors.InvalidArgumentError as e:
+            logging.error(traceback.format_exc())
+            break
         content_images = preprocess_image(content_images)
         loss, c_loss, s_loss, v_loss = train_step(optimizer,
                                                   transformation_model,
