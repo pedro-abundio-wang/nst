@@ -9,11 +9,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from absl import app
 from absl import logging
 
 import os
-import traceback
 import numpy as np
 
 from PIL import Image
@@ -245,23 +243,27 @@ def train_step(optimizer,
     return loss, c_loss, s_loss, v_loss
 
 
-def train(transformation_model,
-          loss_model,
-          coco_tfrecord_path,
+def train(coco_tfrecord_path,
           style_image_path,
           content_layer_name,
           content_weight,
           style_layer_names,
           style_weight,
-          total_variation_weight):
+          total_variation_weight,
+          learning_rate,
+          batch_size,
+          iterations,
+          checkpoint_dir,
+          tensorboard_dir):
+    logging.set_verbosity(logging.INFO)
+    transformation_model = transformation_network()
+    loss_model = loss_network()
 
-    optimizer = optimizers.Adam(learning_rate=1)
+    optimizer = optimizers.Adam(learning_rate=learning_rate)
 
-    dataset = dataset_builder.build(coco_tfrecord_path, 'train')
+    dataset = dataset_builder.build(coco_tfrecord_path, 'train', batch_size)
 
     style_image = load_and_preprocess_image(style_image_path)
-
-    iterations = 40000
 
     # metrics
     loss_metric = tf.keras.metrics.Mean()
@@ -270,16 +272,15 @@ def train(transformation_model,
     vloss_metric = tf.keras.metrics.Mean()
 
     # tensorboard
-    logdir = "./tb/"
-    writer = tf.summary.create_file_writer(logdir)
+    writer = tf.summary.create_file_writer(tensorboard_dir)
     writer.set_as_default()
 
     for i in range(iterations):
         try:
             content_images, _ = next(iter(dataset))
         except tf.errors.InvalidArgumentError as e:
-            logging.error(traceback.format_exc())
-            break
+            logging.error("tf.errors.InvalidArgumentError: {}".format(e))
+            continue
         content_images = preprocess_image(content_images)
         loss, c_loss, s_loss, v_loss = train_step(optimizer,
                                                   transformation_model,
@@ -307,38 +308,7 @@ def train(transformation_model,
             tf.summary.scalar('s_loss', s_loss, step=i)
             tf.summary.scalar('v_loss', v_loss, step=i)
 
-            checkpoint_path = './ckpt/'
-            if not os.path.exists(checkpoint_path):
-                os.makedirs(checkpoint_path)
+            if not os.path.exists(checkpoint_dir):
+                os.makedirs(checkpoint_dir)
             checkpoint = tf.train.Checkpoint(optimizer=optimizer, model=transformation_model)
-            checkpoint.save(checkpoint_path)
-            # checkpoint.restore(tf.train.latest_checkpoint(checkpoint_path))
-
-
-def run():
-    params = {
-        'coco_tfrecord_path': '/home/pedro/datasets/coco',
-        'style_image_path': 'The_Great_Wave_off_Kanagawa.jpg',
-        'content_layer_name': 'block2_conv2',
-        'content_weight': 1e-3,
-        'style_layer_names': [
-            "block1_conv2",
-            "block2_conv2",
-            "block3_conv3",
-            "block4_conv3"
-        ],
-        'style_weight': 1e0,
-        'total_variation_weight': 1e-5
-    }
-    transformation_model = transformation_network()
-    loss_model = loss_network()
-    train(transformation_model, loss_model, **params)
-
-
-def main(_):
-    run()
-
-
-if __name__ == '__main__':
-    logging.set_verbosity(logging.INFO)
-    app.run(main)
+            checkpoint.save(checkpoint_dir)

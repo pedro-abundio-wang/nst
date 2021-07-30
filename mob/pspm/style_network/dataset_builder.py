@@ -7,9 +7,9 @@ import tensorflow as tf
 from mob.pspm.style_network import preprocessing
 
 
-def build(data_dir, split) -> tf.data.Dataset:
+def build(data_dir, split, batch_size) -> tf.data.Dataset:
     dataset = load_records(data_dir, split)
-    dataset = pipeline(dataset)
+    dataset = pipeline(dataset, batch_size)
     return dataset
 
 
@@ -23,17 +23,16 @@ def load_records(data_dir, split) -> tf.data.Dataset:
     return dataset
 
 
-def pipeline(dataset: tf.data.Dataset) -> tf.data.Dataset:
+def pipeline(dataset: tf.data.Dataset, batch_size) -> tf.data.Dataset:
     """Build a pipeline fetching, shuffling, and preprocessing the dataset.
 
     Args:
       dataset: A `tf.data.Dataset` that loads raw files.
-
+      batch_size: batch size
     Returns:
       A TensorFlow dataset outputting batched images and labels.
     """
 
-    batch_size = 4
     shuffle_buffer_size = 10000
     num_devices = 1
 
@@ -48,7 +47,6 @@ def pipeline(dataset: tf.data.Dataset) -> tf.data.Dataset:
 
     dataset = dataset.shuffle(shuffle_buffer_size)
     dataset = dataset.repeat()
-
 
     # Parse, pre-process, and batch the data in parallel
     dataset = dataset.map(parse_record, num_parallel_calls=tf.data.experimental.AUTOTUNE)
