@@ -17,8 +17,8 @@ def transfer(content,
     if content[-3:] in image_type:
         # Build the feed-forward network and load the weights.
         transformation_model = transformation_network()
-        checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
-        transformation_model.load_weights(checkpoint_prefix)
+        latest_checkpoint = tf.train.latest_checkpoint(checkpoint_dir)
+        transformation_model.load_weights(latest_checkpoint).expect_partial()
 
         # Load content image.
         image = utils.load_image(path_to_image=content, max_dim=None)
