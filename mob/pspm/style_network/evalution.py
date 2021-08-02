@@ -9,7 +9,7 @@ from mob.pspm.style_network.style_network import transformation_network
 from mob.pspm.style_network import utils
 
 def transfer(content,
-             checkpoint,
+             checkpoint_dir,
              result):
 
     image_type = ('jpg', 'jpeg', 'png', 'bmp')
@@ -17,7 +17,7 @@ def transfer(content,
     if content[-3:] in image_type:
         # Build the feed-forward network and load the weights.
         transformation_model = transformation_network()
-        checkpoint_prefix = os.path.join(checkpoint, "ckpt")
+        checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
         transformation_model.load_weights(checkpoint_prefix)
 
         # Load content image.
@@ -35,7 +35,7 @@ def transfer(content,
 
     else:
         transformation_model = transformation_network()
-        checkpoint_prefix = os.path.join(checkpoint, "ckpt")
+        checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
         transformation_model.load_weights(checkpoint_prefix)
         resolve_video(transformation_model, path_to_video=content, result=result)
 
