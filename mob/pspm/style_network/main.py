@@ -12,8 +12,8 @@ NUM_ITERATION = 40000
 BATCH_SIZE = 4
 
 STYLE_IMAGE = './images/style/wave.jpg'
-CONTENT_IMAGE = './images/style/Green_Sea_Turtle_grazing_seagrass.jpg'
-RESULT_IMAGE = './image/result/result.jpg'
+CONTENT_IMAGE = './images/content/Green_Sea_Turtle_grazing_seagrass.jpg'
+RESULT_IMAGE = './images/result/result.jpg'
 
 LEARNING_RATE = 1e-3
 CONTENT_WEIGHT = 7.5e0
