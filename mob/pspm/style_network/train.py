@@ -14,29 +14,16 @@ from absl import logging
 import os
 import numpy as np
 
-from PIL import Image
 
 import tensorflow as tf
 
 from tensorflow.keras import optimizers
 from tensorflow.keras import applications
-from tensorflow.keras import preprocessing
 
 from mob.pspm.style_network.style_network import loss_network
 from mob.pspm.style_network.style_network import transformation_network
 from mob.pspm.style_network import dataset_builder
-
-
-def load_image(path_to_image):
-    max_dim = 512
-    image = Image.open(path_to_image)
-    long = max(image.size)
-    scale = max_dim / long
-    image = image.resize((round(image.size[0] * scale), round(image.size[1] * scale)), Image.ANTIALIAS)
-    image = preprocessing.image.img_to_array(image)
-    # We need to broadcast the image array such that it has a batch dimension
-    image = np.expand_dims(image, axis=0)
-    return image
+from mob.pspm.style_network import utils
 
 
 def preprocess_image(images):
@@ -46,7 +33,7 @@ def preprocess_image(images):
 
 def load_and_preprocess_image(path_to_image):
     # Util function to open, resize and format pictures into appropriate tensors
-    images = load_image(path_to_image)
+    images = utils.load_image(path_to_image)
     images = preprocess_image(images)
     return tf.convert_to_tensor(images)
 
@@ -310,5 +297,6 @@ def train(coco_tfrecord_path,
 
             if not os.path.exists(checkpoint_dir):
                 os.makedirs(checkpoint_dir)
+            checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
             checkpoint = tf.train.Checkpoint(optimizer=optimizer, model=transformation_model)
-            checkpoint.save(checkpoint_dir)
+            checkpoint.save(checkpoint_prefix)

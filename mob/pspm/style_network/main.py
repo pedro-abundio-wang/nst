@@ -1,10 +1,13 @@
 import os
 import argparse
+from pathlib import Path
 
 from mob.pspm.style_network.train import train
 from mob.pspm.style_network.evalution import transfer
 
-DATASET_PATH = '~/datasets/coco/'
+
+HOME = str(Path.home())
+DATASET_PATH = HOME + '/datasets/coco/'
 NUM_ITERATION = 40000
 BATCH_SIZE = 4
 
@@ -22,7 +25,7 @@ TENSORBOARD = './tensorboard'
 
 def build_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('command', required=True,
+    parser.add_argument('command',
                         metavar='<command>',
                         help="'train' or 'evaluate'")
     parser.add_argument('--dataset', required=False,
