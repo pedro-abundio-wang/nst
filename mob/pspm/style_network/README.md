@@ -16,11 +16,7 @@ Training takes 5~6 hours on a GTX 1060 3GB (when batch size is 2).
 
 Example usage:
 
-    python main.py train    \
-      --style ./path/to/style/image.jpg \
-      --dataset ./path/to/dataset \
-      --weights ./path/to/weights \
-      --batch 2
+    python main.py train
 
 ### Evaluating Style Transfer Networks
 
@@ -30,7 +26,4 @@ Evaluation takes 2s per frame(712x474) on a GTX 1060 3GB.
 
 Example usage:
 
-    python main.py evaluate    \
-      --weights ./path/to/weights \
-      --content ./path/to/content/image.jpg(video.mp4) \
-      --result ./path/to/save/results/image.jpg
+    python main.py evaluate

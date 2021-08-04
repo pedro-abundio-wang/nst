@@ -15,12 +15,12 @@ STYLE_IMAGE = './images/style/wave.jpg'
 CONTENT_IMAGE = './images/content/Green_Sea_Turtle_grazing_seagrass.jpg'
 RESULT_IMAGE = './images/result/result.jpg'
 
-LEARNING_RATE = 1e-3
-CONTENT_WEIGHT = 7.5e0
-STYLE_WEIGHT = 1e2
-TV_WEIGHT = 2e2
+LEARNING_RATE = 1e1
+CONTENT_WEIGHT = 1e-3
+STYLE_WEIGHT = 1e0
+TV_WEIGHT = 0e0
 
-CHECKPOINT = './checkpoint'
+CHECKPOINT = './model.weights'
 TENSORBOARD = './tensorboard'
 
 

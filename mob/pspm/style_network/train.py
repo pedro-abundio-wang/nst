@@ -295,8 +295,4 @@ def train(coco_tfrecord_path,
             tf.summary.scalar('s_loss', s_loss, step=i)
             tf.summary.scalar('v_loss', v_loss, step=i)
 
-    if not os.path.exists(checkpoint_dir):
-        os.makedirs(checkpoint_dir)
-    checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
-    checkpoint = tf.train.Checkpoint(optimizer=optimizer, model=transformation_model)
-    checkpoint.save(checkpoint_prefix)
+    transformation_model.save_weights(checkpoint_dir, save_format='tf')
