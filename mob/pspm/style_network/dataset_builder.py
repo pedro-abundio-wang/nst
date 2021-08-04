@@ -7,10 +7,40 @@ import tensorflow as tf
 from mob.pspm.style_network import preprocessing
 
 
-def build(data_dir, split, batch_size) -> tf.data.Dataset:
+def build_from_raw(dataset_path, batch_size):
+    dataset = tf.data.Dataset.list_files(dataset_path + '/*.jpg')
+    dataset = dataset.map(load_img, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+    dataset = dataset.shuffle(1024)
+    dataset = dataset.batch(batch_size, drop_remainder=True)
+    dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
+    return dataset
+
+
+def build_from_tfrecord(data_dir, split, batch_size) -> tf.data.Dataset:
     dataset = load_records(data_dir, split)
     dataset = pipeline(dataset, batch_size)
     return dataset
+
+
+def load_img(path_to_img, max_dim=None, resize=True):
+    img = tf.io.read_file(path_to_img)
+    img = tf.image.decode_jpeg(img, channels=3)
+    img = tf.image.convert_image_dtype(img, tf.float32)
+
+    if resize:
+        new_shape = tf.cast([256, 256], tf.int32)
+        img = tf.image.resize(img, new_shape)
+
+    if max_dim:
+        shape = tf.cast(tf.shape(img)[:-1], tf.float32)
+        long_dim = max(shape)
+        scale = max_dim / long_dim
+        new_shape = tf.cast(shape * scale, tf.int32)
+        img = tf.image.resize(img, new_shape)
+
+    img = img[tf.newaxis, :]
+
+    return img
 
 
 def load_records(data_dir, split) -> tf.data.Dataset:
@@ -33,7 +63,7 @@ def pipeline(dataset: tf.data.Dataset, batch_size) -> tf.data.Dataset:
       A TensorFlow dataset outputting batched images and labels.
     """
 
-    shuffle_buffer_size = 10000
+    shuffle_buffer_size = 1024
     num_devices = 1
 
     # Read the data from disk in parallel

@@ -11,7 +11,6 @@ from __future__ import print_function
 
 from absl import logging
 
-import os
 import numpy as np
 
 
@@ -130,7 +129,7 @@ def compute_loss(transformation_model,
     - style_image: Tensor of shape (1, height, width, channel).
     """
     content_features = loss_model(preprocess_image(content_images))
-    style_features = loss_model(preprocess_image(style_image))
+    style_features = loss_model(style_image)
     combination_images = transformation_model(content_images)
     combination_features = loss_model(preprocess_image(combination_images))
 
@@ -229,7 +228,8 @@ def train_step(optimizer,
     return loss, c_loss, s_loss, v_loss
 
 
-def train(coco_tfrecord_path,
+def train(dataset_path,
+          epochs,
           style_image_path,
           content_layer_name,
           content_weight,
@@ -238,16 +238,16 @@ def train(coco_tfrecord_path,
           total_variation_weight,
           learning_rate,
           batch_size,
-          iterations,
           checkpoint_dir,
           tensorboard_dir):
+
     logging.set_verbosity(logging.INFO)
     transformation_model = transformation_network()
     loss_model = loss_network()
 
     optimizer = optimizers.Adam(learning_rate=learning_rate)
 
-    dataset = dataset_builder.build(coco_tfrecord_path, 'train', batch_size)
+    dataset = dataset_builder.build_from_raw(dataset_path, batch_size)
 
     style_image = load_and_preprocess_image(style_image_path)
 
@@ -261,38 +261,38 @@ def train(coco_tfrecord_path,
     writer = tf.summary.create_file_writer(tensorboard_dir)
     writer.set_as_default()
 
-    for i in range(iterations):
-        try:
-            content_images, _ = next(iter(dataset))
-        except tf.errors.InvalidArgumentError as e:
-            logging.error("tf.errors.InvalidArgumentError: {}".format(e))
-            continue
-        loss, c_loss, s_loss, v_loss = train_step(optimizer,
-                                                  transformation_model,
-                                                  loss_model,
-                                                  content_images,
-                                                  style_image,
-                                                  content_layer_name,
-                                                  content_weight,
-                                                  style_layer_names,
-                                                  style_weight,
-                                                  total_variation_weight)
+    for epoch in range(epochs):
+        print('Epoch {}'.format(epoch))
+        i = 0
+        for content_images in dataset:
+            i += 1
+            loss, c_loss, s_loss, v_loss = train_step(optimizer,
+                                                      transformation_model,
+                                                      loss_model,
+                                                      content_images,
+                                                      style_image,
+                                                      content_layer_name,
+                                                      content_weight,
+                                                      style_layer_names,
+                                                      style_weight,
+                                                      total_variation_weight)
 
-        # metrics
-        loss_metric(loss)
-        closs_metric(c_loss)
-        sloss_metric(s_loss)
-        vloss_metric(v_loss)
+            # metrics
+            loss_metric(loss)
+            closs_metric(c_loss)
+            sloss_metric(s_loss)
+            vloss_metric(v_loss)
 
-        if i % 1000 == 0:
-            logging.info("Iteration %d: total_loss=%.4e, content_loss=%.4e, style_loss=%.4e, variation_loss=%.4e"
-                         % (i, loss, c_loss, s_loss, v_loss))
+            if i % 1000 == 0:
+                logging.info("Iteration %d: total_loss=%.4e, content_loss=%.4e, style_loss=%.4e, variation_loss=%.4e"
+                             % (i, loss, c_loss, s_loss, v_loss))
 
-            tf.summary.scalar('loss', loss, step=i)
-            tf.summary.scalar('c_loss', c_loss, step=i)
-            tf.summary.scalar('s_loss', s_loss, step=i)
-            tf.summary.scalar('v_loss', v_loss, step=i)
+                tf.summary.scalar('loss', loss, step=i)
+                tf.summary.scalar('c_loss', c_loss, step=i)
+                tf.summary.scalar('s_loss', s_loss, step=i)
+                tf.summary.scalar('v_loss', v_loss, step=i)
 
-            transformation_model.save_weights(checkpoint_dir, save_format='tf')
+                transformation_model.save_weights(checkpoint_dir, save_format='tf')
 
+    # Training is done
     transformation_model.save_weights(checkpoint_dir, save_format='tf')

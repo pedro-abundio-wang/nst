@@ -7,8 +7,8 @@ from mob.pspm.style_network.evalution import transfer
 
 
 HOME = str(Path.home())
-DATASET_PATH = HOME + '/datasets/coco/'
-NUM_ITERATION = 40000
+DATASET_PATH = HOME + '/datasets/coco/raw-data/train2017'
+EPOCHS = 2
 BATCH_SIZE = 4
 
 STYLE_IMAGE = './images/style/wave.jpg'
@@ -62,7 +62,7 @@ def check_opts(args):
         assert os.path.exists(args.dataset), 'dataset path not found !'
         assert os.path.exists(args.style), 'style image not found !'
         assert args.batch > 0
-        assert NUM_ITERATION > 0
+        assert EPOCHS > 0
         assert CONTENT_WEIGHT >= 0
         assert STYLE_WEIGHT >= 0
         assert TV_WEIGHT >= 0
@@ -78,7 +78,8 @@ def main():
     check_opts(args)
     if args.command == "train":
         parameters = {
-            'coco_tfrecord_path' : args.dataset,
+            'dataset_path' : args.dataset,
+            'epochs' : EPOCHS,
             'style_image_path' : args.style,
             'content_layer_name': 'block2_conv2',
             'content_weight' : CONTENT_WEIGHT,
@@ -92,7 +93,6 @@ def main():
             'total_variation_weight' : TV_WEIGHT,
             'learning_rate' : LEARNING_RATE,
             'batch_size' : args.batch,
-            'iterations' : NUM_ITERATION,
             'checkpoint_dir' : args.checkpoint,
             'tensorboard_dir' : args.tensorboard
         }
