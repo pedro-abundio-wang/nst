@@ -129,11 +129,10 @@ def compute_loss(transformation_model,
     - content_images: Tensor of shape (batch_size, height, width, channel).
     - style_image: Tensor of shape (1, height, width, channel).
     """
-    content_features = loss_model(content_images)
-    style_features = loss_model(style_image)
-    # random_images = tf.Variable(tf.random.uniform(content_images.shape))
+    content_features = loss_model(preprocess_image(content_images))
+    style_features = loss_model(preprocess_image(style_image))
     combination_images = transformation_model(content_images)
-    combination_features = loss_model(combination_images)
+    combination_features = loss_model(preprocess_image(combination_images))
 
     assert content_images.shape == combination_images.shape
     batch_size, _, _, _ = content_images.shape
@@ -268,7 +267,6 @@ def train(coco_tfrecord_path,
         except tf.errors.InvalidArgumentError as e:
             logging.error("tf.errors.InvalidArgumentError: {}".format(e))
             continue
-        content_images = preprocess_image(content_images)
         loss, c_loss, s_loss, v_loss = train_step(optimizer,
                                                   transformation_model,
                                                   loss_model,
@@ -286,7 +284,7 @@ def train(coco_tfrecord_path,
         sloss_metric(s_loss)
         vloss_metric(v_loss)
 
-        if i % 100 == 0:
+        if i % 1000 == 0:
             logging.info("Iteration %d: total_loss=%.4e, content_loss=%.4e, style_loss=%.4e, variation_loss=%.4e"
                          % (i, loss, c_loss, s_loss, v_loss))
 
@@ -294,5 +292,7 @@ def train(coco_tfrecord_path,
             tf.summary.scalar('c_loss', c_loss, step=i)
             tf.summary.scalar('s_loss', s_loss, step=i)
             tf.summary.scalar('v_loss', v_loss, step=i)
+
+            transformation_model.save_weights(checkpoint_dir, save_format='tf')
 
     transformation_model.save_weights(checkpoint_dir, save_format='tf')
