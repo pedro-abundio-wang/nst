@@ -49,7 +49,7 @@ def resolve_video(network, path_to_video, result):
 
         prediction = network(frame)
 
-        prediction = clip_0_1(prediction)
+        prediction = clip(prediction)
         prediction = np.array(prediction).astype(np.uint8).squeeze()
         prediction = cv2.cvtColor(prediction, cv2.COLOR_RGB2BGR)
 
@@ -72,5 +72,5 @@ def create_folder(diirname):
         print('Directory ', diirname, ' already exists')       
 
 
-def clip_0_1(image):
+def clip(image):
     return tf.clip_by_value(image, clip_value_min=0.0, clip_value_max=255.0)

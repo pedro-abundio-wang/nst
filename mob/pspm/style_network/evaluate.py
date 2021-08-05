@@ -1,4 +1,4 @@
-from utils import tensor_to_image, load_img, clip_0_1, resolve_video
+from utils import tensor_to_image, load_img, clip, resolve_video
 from mob.pspm.style_network.models import transformation_network
 
 image_type = ('jpg', 'jpeg', 'png', 'bmp')
@@ -19,7 +19,7 @@ def transfer(content, weights, max_dim, result):
         image = transformation_model(image)
 
         # Clip pixel values to 0-255
-        image = clip_0_1(image)
+        image = clip(image)
 
         # Save the style image
         tensor_to_image(image).save(result)
