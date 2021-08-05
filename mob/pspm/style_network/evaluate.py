@@ -1,5 +1,5 @@
 from utils import tensor_to_image, load_img, clip_0_1, resolve_video
-from .models import transformation_network
+from mob.pspm.style_network.models import transformation_network
 
 image_type = ('jpg', 'jpeg', 'png', 'bmp')
 

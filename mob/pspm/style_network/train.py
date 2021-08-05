@@ -4,11 +4,11 @@ import tensorflow as tf
 from tensorflow.keras import applications
 
 from utils import load_img
-from .models import transformation_network
-from .models import StyleContentModel
-from .models import style_loss
-from .models import content_loss
-from .models import total_variation_loss
+from mob.pspm.style_network.models import transformation_network
+from mob.pspm.style_network.models import StyleContentModel
+from mob.pspm.style_network.models import style_loss
+from mob.pspm.style_network.models import content_loss
+from mob.pspm.style_network.models import total_variation_loss
 
 
 def trainer(style_file, dataset_path, weights_path, content_weight, style_weight,
