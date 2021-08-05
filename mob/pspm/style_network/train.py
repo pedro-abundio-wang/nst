@@ -12,7 +12,7 @@ from .models import total_variation_loss
 
 
 def trainer(style_file, dataset_path, weights_path, content_weight, style_weight,
-            tv_weight, learning_rate, batch_size, epochs, debug):
+            tv_weight, learning_rate, batch_size, epochs):
     # Setup the given layers
     content_layers = ['block4_conv2']
 
@@ -95,11 +95,10 @@ def trainer(style_file, dataset_path, weights_path, content_weight, style_weight
                 print('=====================================')
                 print('            Weights saved!           ')
                 print('=====================================\n')
+                print('step %s: loss = %s' % (iteration, loss_metric.result()))
+                print('s_loss={}, c_loss={}, t_loss={}'.format(sloss_metric.result(), closs_metric.result(),
+                                                               tloss_metric.result()))
 
-                if debug:
-                    print('step %s: loss = %s' % (iteration, loss_metric.result()))
-                    print('s_loss={}, c_loss={}, t_loss={}'.format(sloss_metric.result(), closs_metric.result(),
-                                                                   tloss_metric.result()))
 
     end = time.time()
     print("Total time: {:.1f}".format(end - start))

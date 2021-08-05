@@ -51,9 +51,6 @@ Example usage:
 
     python main.py train    \
       --style ./path/to/style/image.jpg \
-      --dataset ./path/to/dataset \
-      --weights ./path/to/weights \
-      --batch 2    
 
 ### Evaluating Style Transfer Networks
 Use `main.py` to evaluate a style transfer network. 

@@ -15,7 +15,7 @@ BATCH_SIZE = 4
 HOME = str(Path.home())
 DATASET_PATH = HOME + '/datasets/coco/raw-data/train2017'
 STYLE_IMAGE = './images/style/wave.jpg'
-WEIGHTS_PATH = './weights/wave/weights'
+WEIGHTS_PATH = './weights/wave/model.weights'
 CONTENT_IMAGE = './images/content/chicago.jpg'
 RESULT_NAME = './images/results/chicago-wave.jpg'
 
@@ -84,7 +84,6 @@ def main():
                 'style_file' : args.style,
                 'dataset_path' : args.dataset,
                 'weights_path' : args.weights,
-                'debug' : args.debug,
                 'content_weight' : CONTENT_WEIGHT,
                 'style_weight' : STYLE_WEIGHT,
                 'tv_weight' : TV_WEIGHT,
