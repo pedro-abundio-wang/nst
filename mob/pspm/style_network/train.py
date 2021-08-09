@@ -5,6 +5,7 @@ from tensorflow.keras import applications
 
 from utils import load_img
 from mob.pspm.style_network.models import transformation_network
+from mob.pspm.style_network.models import feed_forward
 from mob.pspm.style_network.models import StyleContentModel
 from mob.pspm.style_network.models import style_loss
 from mob.pspm.style_network.models import content_loss
@@ -23,7 +24,7 @@ def trainer(style_file, dataset_path, weights_path, content_weight, style_weight
                     'block5_conv1']
 
     # Build style-network transformer
-    transformation_model = transformation_network()
+    transformation_model = feed_forward()
 
     # Build VGG-19 Loss network
     loss_model = StyleContentModel(style_layers, content_layers)
