@@ -2,7 +2,6 @@ import tensorflow as tf
 import numpy as np
 import PIL.Image
 import cv2
-import os
 
 
 def tensor_to_image(tensor):
@@ -62,14 +61,6 @@ def resolve_video(network, path_to_video, result):
     cap.release()
     out.release()
     cv2.destroyALLWindow()
-
-
-def create_folder(diirname):
-    if not os.path.exists(diirname):
-        os.mkdir(diirname)
-        print('Directory ', diirname, ' createrd')
-    else:
-        print('Directory ', diirname, ' already exists')       
 
 
 def clip(image):

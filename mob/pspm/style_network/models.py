@@ -135,8 +135,6 @@ def residual_block(input_tensor,
         kernel_initializer='he_normal')(input_tensor)
     x = tfa.layers.InstanceNormalization(
         axis=bn_axis)(x)
-    # x = layers.BatchNormalization(
-    #     axis=bn_axis)(x)
     x = layers.Activation('relu')(x)
 
     x = layers.Conv2D(
@@ -147,8 +145,6 @@ def residual_block(input_tensor,
         kernel_initializer='he_normal')(x)
     x = tfa.layers.InstanceNormalization(
         axis=bn_axis)(x)
-    # x = layers.BatchNormalization(
-    #     axis=bn_axis)(x)
 
     x = layers.add([x, input_tensor[:, 2:-2, 2:-2, :]])
 
@@ -205,8 +201,6 @@ def transformation_network():
         kernel_initializer='he_normal')(x)
     x = tfa.layers.InstanceNormalization(
         axis=channel_axis)(x)
-    # x = layers.BatchNormalization(
-    #     axis=channel_axis)(x)
     x = layers.Activation('relu')(x)
 
     x = layers.Conv2D(
@@ -217,8 +211,6 @@ def transformation_network():
         kernel_initializer='he_normal')(x)
     x = tfa.layers.InstanceNormalization(
         axis=channel_axis)(x)
-    # x = layers.BatchNormalization(
-    #     axis=channel_axis)(x)
     x = layers.Activation('relu')(x)
 
     x = layers.Conv2D(
@@ -229,8 +221,6 @@ def transformation_network():
         kernel_initializer='he_normal')(x)
     x = tfa.layers.InstanceNormalization(
         axis=channel_axis)(x)
-    # x = layers.BatchNormalization(
-    #     axis=channel_axis)(x)
     x = layers.Activation('relu')(x)
 
     x = residual_block(x, filters=128)
@@ -247,8 +237,6 @@ def transformation_network():
         kernel_initializer='he_normal')(x)
     x = tfa.layers.InstanceNormalization(
         axis=channel_axis)(x)
-    # x = layers.BatchNormalization(
-    #     axis=channel_axis)(x)
     x = layers.Activation('relu')(x)
 
     x = layers.Conv2DTranspose(
@@ -259,8 +247,6 @@ def transformation_network():
         kernel_initializer='he_normal')(x)
     x = tfa.layers.InstanceNormalization(
         axis=channel_axis)(x)
-    # x = layers.BatchNormalization(
-    #     axis=channel_axis)(x)
     x = layers.Activation('relu')(x)
 
     x = layers.Conv2D(
@@ -271,8 +257,6 @@ def transformation_network():
         kernel_initializer='he_normal')(x)
     x = tfa.layers.InstanceNormalization(
         axis=channel_axis)(x)
-    # x = layers.BatchNormalization(
-    #     axis=channel_axis)(x)
     x = tf.nn.tanh(x) * 150 + 255. / 2
 
     # Create model.
