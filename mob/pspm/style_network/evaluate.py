@@ -9,7 +9,7 @@ def transfer(content, weights, max_dim, result):
 
     if content[-3:] in image_type:
         # Build the feed-forward network and load the weights.
-        transformation_model = feed_forward()
+        transformation_model = transformation_network()
         transformation_model.load_weights(weights).expect_partial()
 
         # Load content image.

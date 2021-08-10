@@ -24,7 +24,7 @@ def trainer(style_file, dataset_path, weights_path, content_weight, style_weight
                     'block5_conv1']
 
     # Build style-network transformer
-    transformation_model = feed_forward()
+    transformation_model = transformation_network()
 
     # Build VGG-19 Loss network
     loss_model = StyleContentModel(style_layers, content_layers)

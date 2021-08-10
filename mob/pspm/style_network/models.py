@@ -11,6 +11,7 @@ from __future__ import print_function
 
 import abc
 import tensorflow as tf
+import tensorflow_addons as tfa
 
 from tensorflow.keras import backend
 from tensorflow.keras import models
@@ -132,8 +133,10 @@ def residual_block(input_tensor,
         strides=1,
         padding='valid',
         kernel_initializer='he_normal')(input_tensor)
-    x = layers.BatchNormalization(
+    x = tfa.layers.InstanceNormalization(
         axis=bn_axis)(x)
+    # x = layers.BatchNormalization(
+    #     axis=bn_axis)(x)
     x = layers.Activation('relu')(x)
 
     x = layers.Conv2D(
@@ -142,8 +145,10 @@ def residual_block(input_tensor,
         strides=1,
         padding='valid',
         kernel_initializer='he_normal')(x)
-    x = layers.BatchNormalization(
+    x = tfa.layers.InstanceNormalization(
         axis=bn_axis)(x)
+    # x = layers.BatchNormalization(
+    #     axis=bn_axis)(x)
 
     x = layers.add([x, input_tensor[:, 2:-2, 2:-2, :]])
 
@@ -198,8 +203,10 @@ def transformation_network():
         strides=1,
         padding='same',
         kernel_initializer='he_normal')(x)
-    x = layers.BatchNormalization(
+    x = tfa.layers.InstanceNormalization(
         axis=channel_axis)(x)
+    # x = layers.BatchNormalization(
+    #     axis=channel_axis)(x)
     x = layers.Activation('relu')(x)
 
     x = layers.Conv2D(
@@ -208,8 +215,10 @@ def transformation_network():
         strides=2,
         padding='same',
         kernel_initializer='he_normal')(x)
-    x = layers.BatchNormalization(
+    x = tfa.layers.InstanceNormalization(
         axis=channel_axis)(x)
+    # x = layers.BatchNormalization(
+    #     axis=channel_axis)(x)
     x = layers.Activation('relu')(x)
 
     x = layers.Conv2D(
@@ -218,8 +227,10 @@ def transformation_network():
         strides=2,
         padding='same',
         kernel_initializer='he_normal')(x)
-    x = layers.BatchNormalization(
+    x = tfa.layers.InstanceNormalization(
         axis=channel_axis)(x)
+    # x = layers.BatchNormalization(
+    #     axis=channel_axis)(x)
     x = layers.Activation('relu')(x)
 
     x = residual_block(x, filters=128)
@@ -234,8 +245,10 @@ def transformation_network():
         strides=2,
         padding='same',
         kernel_initializer='he_normal')(x)
-    x = layers.BatchNormalization(
+    x = tfa.layers.InstanceNormalization(
         axis=channel_axis)(x)
+    # x = layers.BatchNormalization(
+    #     axis=channel_axis)(x)
     x = layers.Activation('relu')(x)
 
     x = layers.Conv2DTranspose(
@@ -244,8 +257,10 @@ def transformation_network():
         strides=2,
         padding='same',
         kernel_initializer='he_normal')(x)
-    x = layers.BatchNormalization(
+    x = tfa.layers.InstanceNormalization(
         axis=channel_axis)(x)
+    # x = layers.BatchNormalization(
+    #     axis=channel_axis)(x)
     x = layers.Activation('relu')(x)
 
     x = layers.Conv2D(
@@ -254,8 +269,10 @@ def transformation_network():
         strides=1,
         padding='same',
         kernel_initializer='he_normal')(x)
-    x = layers.BatchNormalization(
+    x = tfa.layers.InstanceNormalization(
         axis=channel_axis)(x)
+    # x = layers.BatchNormalization(
+    #     axis=channel_axis)(x)
     x = tf.nn.tanh(x) * 150 + 255. / 2
 
     # Create model.
@@ -281,11 +298,12 @@ class instance_norm(tf.keras.layers.Layer):
 
         return self.gamma * x + self.beta
 
+
 class conv_2d(tf.keras.layers.Layer):
     def __init__(self, filters, kernel, stride):
         super(conv_2d, self).__init__()
         pad = kernel // 2
-        self.paddings = tf.constant([[0, 0], [pad, pad],[pad, pad], [0, 0]])
+        self.paddings = tf.constant([[0, 0], [pad, pad], [pad, pad], [0, 0]])
         self.conv2d = tf.keras.layers.Conv2D(filters, kernel, stride, use_bias=False, padding='valid')
         self.instance_norm = instance_norm()
 
@@ -297,6 +315,7 @@ class conv_2d(tf.keras.layers.Layer):
         if relu:
             x = tf.nn.relu(x)
         return x
+
 
 class resize_conv_2d(tf.keras.layers.Layer):
     def __init__(self, filters, kernel, stride):
@@ -317,6 +336,7 @@ class resize_conv_2d(tf.keras.layers.Layer):
 
         return tf.nn.relu(x)
 
+
 class tran_conv_2d(tf.keras.layers.Layer):
     def __init__(self, filters, kernel, stride):
         super(tran_conv_2d, self).__init__()
@@ -328,6 +348,7 @@ class tran_conv_2d(tf.keras.layers.Layer):
         x = self.instance_norm(x)
 
         return tf.nn.relu(x)
+
 
 class residual(tf.keras.layers.Layer):
     def __init__(self, filters, kernel, stride):
@@ -352,8 +373,8 @@ class feed_forward(tf.keras.models.Model):
         self.resid3 = residual(128, 3, 1)
         self.resid4 = residual(128, 3, 1)
         self.resid5 = residual(128, 3, 1)
-        #self.tran_conv1 = tran_conv_2d(64, 3, 2)
-        #self.tran_conv2 = tran_conv_2d(32, 3, 2)
+        # self.tran_conv1 = tran_conv_2d(64, 3, 2)
+        # self.tran_conv2 = tran_conv_2d(32, 3, 2)
         self.resize_conv1 = resize_conv_2d(64, 3, 2)
         self.resize_conv2 = resize_conv_2d(32, 3, 2)
         self.conv4 = conv_2d(3, 9, 1)
@@ -370,5 +391,4 @@ class feed_forward(tf.keras.models.Model):
         x = self.resize_conv1(x)
         x = self.resize_conv2(x)
         x = self.conv4(x, relu=False)
-        return (tf.nn.tanh(x) * 150 + 255. / 2)     # for better convergence
-
+        return (tf.nn.tanh(x) * 150 + 255. / 2)  # for better convergence
