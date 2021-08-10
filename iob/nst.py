@@ -508,7 +508,7 @@ def nst(feature_extractor):
             "block5_conv1",
         ],
         'style_weight': 1e0,
-        'total_variation_weight': 0,
+        'total_variation_weight': 1e-5,
         'result_prefix': 'nst',
         'init_random': False
     }
