@@ -4,9 +4,9 @@ from pathlib import Path
 from train import trainer
 from evaluate import transfer
 
-CONTENT_WEIGHT = 1e0
-STYLE_WEIGHT = 1e3
-TV_WEIGHT = 1e2
+CONTENT_WEIGHT = 1e-3
+STYLE_WEIGHT = 1e0
+TV_WEIGHT = 1e-5
 
 LEARNING_RATE = 1e-3
 NUM_EPOCHS = 2
