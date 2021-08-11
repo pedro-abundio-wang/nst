@@ -151,6 +151,22 @@ def residual_block(input_tensor,
     return x
 
 
+class ResizeConv2D(layers.Layer):
+    def __init__(self, filters, kernel_size, strides, padding, kernel_initializer):
+        super(ResizeConv2D, self).__init__()
+        self.conv = layers.Conv2D(filters=filters, kernel_size=kernel_size,
+                                  strides=strides, padding=padding,
+                                  kernel_initializer=kernel_initializer)
+        self.strides = strides
+
+    def call(self, inputs, *args, **kwargs):
+        height = inputs.shape[1] * self.strides * 2
+        width = inputs.shape[2] * self.strides * 2
+        x = tf.image.resize(inputs, [height, width], method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+        x = self.conv(x)
+        return x
+
+
 def transformation_network():
     """
     Our image transformation networks roughly follow the architectural guidelines
@@ -229,7 +245,7 @@ def transformation_network():
     x = residual_block(x, filters=128)
     x = residual_block(x, filters=128)
 
-    x = layers.Conv2DTranspose(
+    x = ResizeConv2D(
         filters=64,
         kernel_size=3,
         strides=2,
@@ -239,7 +255,7 @@ def transformation_network():
         axis=channel_axis)(x)
     x = layers.Activation('relu')(x)
 
-    x = layers.Conv2DTranspose(
+    x = ResizeConv2D(
         filters=32,
         kernel_size=3,
         strides=2,
