@@ -15,7 +15,7 @@ BATCH_SIZE = 4
 HOME = str(Path.home())
 DATASET_PATH = HOME + '/datasets/coco/raw-data/train2017'
 STYLE_IMAGE = './images/style/wave.jpg'
-WEIGHTS_PATH = './weights/wave/model.weights'
+SAVED_MODEL_PATH = './saved_model/wave/'
 CONTENT_IMAGE = './images/content/chicago.jpg'
 RESULT_NAME = './images/results/chicago-wave.jpg'
 
@@ -37,10 +37,10 @@ def build_parser():
                         metavar='CONTENT_IMAGE',
                         help='Content image/video to evaluate with',
                         default=CONTENT_IMAGE)
-    parser.add_argument('--weights', required=False,
-                        metavar='WEIGHTS_PATH',
-                        help='Checkpoints directory',
-                        default=WEIGHTS_PATH)
+    parser.add_argument('--saved_model_path', required=False,
+                        metavar='SAVED_MODEL_PATH',
+                        help='Saved model directory',
+                        default=SAVED_MODEL_PATH)
     parser.add_argument('--result', required=False,
                         metavar='RESULT_NAME',
                         help='Path to the transfer results',
@@ -69,7 +69,7 @@ def check_opts(args):
         assert LEARNING_RATE >= 0
     elif args.command == "evaluate":
         assert args.content, 'content image/video not found !'
-        assert args.weights, 'weights path not found !'
+        assert args.saved_model_path, 'saved model path not found !'
 
 
 def main():
@@ -83,7 +83,7 @@ def main():
         parameters = {
                 'style_file' : args.style,
                 'dataset_path' : args.dataset,
-                'weights_path' : args.weights,
+                'saved_model_path' : args.saved_model_path,
                 'content_weight' : CONTENT_WEIGHT,
                 'style_weight' : STYLE_WEIGHT,
                 'tv_weight' : TV_WEIGHT,
@@ -99,7 +99,7 @@ def main():
 
         parameters = {
                 'content' : args.content,
-                'weights' : args.weights,
+                'saved_model_path' : args.saved_model_path,
                 'max_dim' : args.max_dim,
                 'result' : args.result,
             }

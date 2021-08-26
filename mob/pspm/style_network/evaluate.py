@@ -1,15 +1,18 @@
+import tensorflow as tf
+
 from utils import tensor_to_image, load_img, clip, resolve_video
 from mob.pspm.style_network.models import transformation_network
 
 image_type = ('jpg', 'jpeg', 'png', 'bmp')
 
 
-def transfer(content, weights, max_dim, result):
+def transfer(content, saved_model_path, max_dim, result):
+
+    # Build the feed-forward network and load the weights.
+    loaded = tf.saved_model.load(saved_model_path)
+    transformation_model = loaded.signatures["serving_default"]
 
     if content[-3:] in image_type:
-        # Build the feed-forward network and load the weights.
-        transformation_model = transformation_network()
-        transformation_model.load_weights(weights).expect_partial()
 
         # Load content image.
         image = load_img(path_to_img=content, max_dim=max_dim, resize=False)
@@ -25,7 +28,4 @@ def transfer(content, weights, max_dim, result):
         tensor_to_image(image).save(result)
 
     else:
-        transformation_model = transformation_network()
-        transformation_model.load_weights(weights)
-
         resolve_video(transformation_model, path_to_video=content, result=result)

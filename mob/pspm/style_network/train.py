@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import tensorflow as tf
 
@@ -11,7 +12,7 @@ from mob.pspm.style_network.models import content_loss
 from mob.pspm.style_network.models import total_variation_loss
 
 
-def trainer(style_file, dataset_path, weights_path, content_weight, style_weight,
+def trainer(style_file, dataset_path, saved_model_path, content_weight, style_weight,
             tv_weight, learning_rate, batch_size, epochs):
     # Setup the given layers
     content_layers = ['block4_conv2']
@@ -91,10 +92,6 @@ def trainer(style_file, dataset_path, weights_path, content_weight, style_weight
 
             if iteration % 3000 == 0:
                 # Save checkpoints
-                transformation_model.save_weights(weights_path, save_format='tf')
-                print('=====================================')
-                print('            Weights saved!           ')
-                print('=====================================\n')
                 print('step %s: loss = %s' % (iteration, loss_metric.result()))
                 print('s_loss={}, c_loss={}, t_loss={}'.format(sloss_metric.result(), closs_metric.result(),
                                                                tloss_metric.result()))
@@ -104,7 +101,7 @@ def trainer(style_file, dataset_path, weights_path, content_weight, style_weight
     print("Total time: {:.1f}".format(end - start))
 
     # Training is done !
-    transformation_model.save_weights(weights_path, save_format='tf')
+    tf.saved_model.save(transformation_model, saved_model_path)
     print('=====================================')
     print('             All saved!              ')
     print('=====================================\n')
