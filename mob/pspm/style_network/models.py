@@ -160,8 +160,8 @@ class ResizeConv2D(layers.Layer):
         self.strides = strides
 
     def call(self, inputs, *args, **kwargs):
-        height = inputs.shape[1] * self.strides * 2
-        width = inputs.shape[2] * self.strides * 2
+        height = tf.shape(inputs)[1] * self.strides * 2
+        width = tf.shape(inputs)[2] * self.strides * 2
         x = tf.image.resize(inputs, [height, width], method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
         x = self.conv(x)
         return x
@@ -198,7 +198,8 @@ def transformation_network():
     3 x 9 x 9 conv, stride 1       3 x 256 x 256
     """
 
-    img_input = layers.Input()
+    input_shape = (None, None, 3)
+    img_input = layers.Input(shape=input_shape)
     x = img_input
 
     if backend.image_data_format() == 'channels_first':
