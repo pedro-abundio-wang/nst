@@ -198,8 +198,7 @@ def transformation_network():
     3 x 9 x 9 conv, stride 1       3 x 256 x 256
     """
 
-    input_shape = (256, 256, 3)
-    img_input = layers.Input(shape=input_shape)
+    img_input = layers.Input()
     x = img_input
 
     if backend.image_data_format() == 'channels_first':

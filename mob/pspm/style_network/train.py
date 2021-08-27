@@ -76,8 +76,8 @@ def trainer(style_file, dataset_path, saved_model_path, content_weight, style_we
     import time
     start = time.time()
 
-    for e in range(epochs):
-        print('Epoch {}'.format(e))
+    for epoch in range(epochs):
+        print('Epoch {}'.format(epoch))
         iteration = 0
 
         for image_batch in train_dataset:
