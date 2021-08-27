@@ -48,7 +48,7 @@ Example usage:
     python main.py train \
       --style ./path/to/style/image.jpg \
       --dataset ./path/to/mscoco \
-      --weights ./path/to/model/weights \
+      --saved_model_path ./path/to/model/ \
 
 ### Evaluating Style Transfer Networks
 
@@ -57,6 +57,6 @@ Use `main.py` to evaluate a style transfer network.
 Example usage:
 
     python main.py evaluate \
-      --weights ./path/to/model/weights \
+      --saved_model_path ./path/to/model/ \
       --content ./path/to/content/image.jpg(video.mp4) \
       --result ./path/to/save/results/image.jpg

@@ -1,18 +1,16 @@
-import tensorflow as tf
+from tensorflow.keras import models
 
 from utils import tensor_to_image, load_img, clip, resolve_video
-from mob.pspm.style_network.models import transformation_network
 
-image_type = ('jpg', 'jpeg', 'png', 'bmp')
+IMAGE_TYPE = ('jpg', 'jpeg', 'png', 'bmp')
 
 
 def transfer(content, saved_model_path, max_dim, result):
 
     # Build the feed-forward network and load the weights.
-    loaded = tf.saved_model.load(saved_model_path)
-    transformation_model = loaded.signatures["serving_default"]
+    transformation_model = models.load_model(saved_model_path)
 
-    if content[-3:] in image_type:
+    if content[-3:] in IMAGE_TYPE:
 
         # Load content image.
         image = load_img(path_to_img=content, max_dim=max_dim, resize=False)

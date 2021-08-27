@@ -1,8 +1,7 @@
-import os
 import numpy as np
 import tensorflow as tf
 
-from tensorflow.keras import applications
+from tensorflow.keras import models
 
 from utils import load_img
 from mob.pspm.style_network.models import transformation_network
@@ -101,7 +100,7 @@ def trainer(style_file, dataset_path, saved_model_path, content_weight, style_we
     print("Total time: {:.1f}".format(end - start))
 
     # Training is done !
-    tf.saved_model.save(transformation_model, saved_model_path)
+    models.save_model(transformation_model, saved_model_path)
     print('=====================================')
     print('             All saved!              ')
     print('=====================================\n')
