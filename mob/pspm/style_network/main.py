@@ -16,8 +16,9 @@ HOME = str(Path.home())
 DATASET_PATH = HOME + '/datasets/coco/raw-data/train2017'
 STYLE_IMAGE = './images/style/wave.jpg'
 SAVED_MODEL_PATH = './saved_model/wave/'
-CONTENT_IMAGE = './images/content/chicago.jpg'
-RESULT_NAME = './images/results/chicago-wave.jpg'
+TFLITE_MODEL_PATH = './tflite_model/wave/'
+CONTENT_IMAGE = './images/content/trump.jpg'
+RESULT_NAME = './images/results/wave.jpg'
 
 
 def build_parser():
@@ -41,6 +42,10 @@ def build_parser():
                         metavar='SAVED_MODEL_PATH',
                         help='Saved model directory',
                         default=SAVED_MODEL_PATH)
+    parser.add_argument('--tflite_model_path', required=False,
+                        metavar='SAVED_MODEL_PATH',
+                        help='TFLite model directory',
+                        default=TFLITE_MODEL_PATH)
     parser.add_argument('--result', required=False,
                         metavar='RESULT_NAME',
                         help='Path to the transfer results',
@@ -84,6 +89,7 @@ def main():
                 'style_file' : args.style,
                 'dataset_path' : args.dataset,
                 'saved_model_path' : args.saved_model_path,
+                'tflite_model_path' : args.tflite_model_path,
                 'content_weight' : CONTENT_WEIGHT,
                 'style_weight' : STYLE_WEIGHT,
                 'tv_weight' : TV_WEIGHT,
