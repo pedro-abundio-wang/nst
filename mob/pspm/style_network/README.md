@@ -17,6 +17,7 @@ Example usage:
       --style ./path/to/style/image.jpg \
       --dataset ./path/to/mscoco \
       --saved_model_path ./path/to/model/ \
+      --tflite_model_path ./path/to/model/ \
 
 ### Evaluating Style Transfer Networks
 

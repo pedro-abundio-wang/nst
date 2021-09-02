@@ -43,7 +43,7 @@ def build_parser():
                         help='Saved model directory',
                         default=SAVED_MODEL_PATH)
     parser.add_argument('--tflite_model_path', required=False,
-                        metavar='SAVED_MODEL_PATH',
+                        metavar='TFLITE_MODEL_PATH',
                         help='TFLite model directory',
                         default=TFLITE_MODEL_PATH)
     parser.add_argument('--result', required=False,
