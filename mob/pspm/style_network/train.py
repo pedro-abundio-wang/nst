@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import tensorflow as tf
 
@@ -109,6 +110,8 @@ def trainer(style_file, dataset_path, saved_model_path, tflite_model_path,conten
     converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_path)
     tflite_model = converter.convert()
     # Save the model.
+    if not os.path.exists(tflite_model_path):
+        os.mkdir(tflite_model_path)
     with open(tflite_model_path + 'model.tflite', 'wb') as f:
         f.write(tflite_model)
 
