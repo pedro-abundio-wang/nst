@@ -106,6 +106,7 @@ def main():
         parameters = {
                 'content' : args.content,
                 'saved_model_path' : args.saved_model_path,
+                'tflite_model_path' : args.tflite_model_path,
                 'max_dim' : args.max_dim,
                 'result' : args.result,
             }

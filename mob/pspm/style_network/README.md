@@ -27,5 +27,6 @@ Example usage:
 
     python main.py evaluate \
       --saved_model_path ./path/to/model/ \
+      --tflite_model_path ./path/to/model/ \
       --content ./path/to/content/image.jpg(video.mp4) \
       --result ./path/to/save/results/image.jpg
