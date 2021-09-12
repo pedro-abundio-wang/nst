@@ -29,9 +29,10 @@ def transfer(content, saved_model_path, tflite_model_path, max_dim, result):
         image = clip(image)
 
         # Save the style image
-        result_path = os.path.join(dirname, 'saved_model', basename)
-        if not os.path.exists(dirname):
-            os.mkdir(dirname)
+        result_dir = os.path.join(dirname, 'saved_model')
+        result_path = os.path.join(result_dir, basename)
+        if not os.path.exists(result_dir):
+            os.mkdir(result_dir)
         tensor_to_image(image).save(result_path)
 
         ##################################################
@@ -50,9 +51,10 @@ def transfer(content, saved_model_path, tflite_model_path, max_dim, result):
         image = clip(image)
 
         # Save the style image
-        result_path = os.path.join(dirname, 'tflite_model', basename)
-        if not os.path.exists(dirname):
-            os.mkdir(dirname)
+        result_dir = os.path.join(dirname, 'tflite_model')
+        result_path = os.path.join(result_dir, basename)
+        if not os.path.exists(result_dir):
+            os.mkdir(result_dir)
         tensor_to_image(image).save(result_path)
 
     else:
