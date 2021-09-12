@@ -37,13 +37,16 @@ def transfer(content, saved_model_path, tflite_model_path, max_dim, result):
 
         ##################################################
 
-        # Load TFLite model and allocate tensors.
+        # Load TFLite model
         interpreter = tf.lite.Interpreter(tflite_model_path)
-        interpreter.allocate_tensors()
 
         # Get input and output tensors.
         input_index = interpreter.get_input_details()[0]["index"]
         output_index = interpreter.get_output_details()[0]["index"]
+
+        # resize input shape and allocate tensors
+        interpreter.resize_tensor_input(input_index, tf.shape(content_image).numpy(), strict=True)
+        interpreter.allocate_tensors()
 
         interpreter.set_tensor(input_index, content_image)
         interpreter.invoke()
