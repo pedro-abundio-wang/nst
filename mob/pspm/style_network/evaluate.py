@@ -29,7 +29,10 @@ def transfer(content, saved_model_path, tflite_model_path, max_dim, result):
         image = clip(image)
 
         # Save the style image
-        tensor_to_image(image).save(os.path.join(dirname, 'saved_model', basename))
+        result_path = os.path.join(dirname, 'saved_model', basename)
+        if not os.path.exists(dirname):
+            os.mkdir(dirname)
+        tensor_to_image(image).save(result_path)
 
         ##################################################
 
@@ -47,7 +50,10 @@ def transfer(content, saved_model_path, tflite_model_path, max_dim, result):
         image = clip(image)
 
         # Save the style image
-        tensor_to_image(image).save(os.path.join(dirname, 'tflite_model', basename))
+        result_path = os.path.join(dirname, 'tflite_model', basename)
+        if not os.path.exists(dirname):
+            os.mkdir(dirname)
+        tensor_to_image(image).save(result_path)
 
     else:
         # Build the feed-forward network and load the weights.
