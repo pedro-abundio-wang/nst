@@ -12,7 +12,7 @@ from mob.pspm.style_network.models import content_loss
 from mob.pspm.style_network.models import total_variation_loss
 
 
-def trainer(style_file, dataset_path, saved_model_path, tflite_model_path,content_weight, style_weight,
+def trainer(style_file, dataset_path, saved_model_path, tflite_model_path, content_weight, style_weight,
             tv_weight, learning_rate, batch_size, epochs):
     # Setup the given layers
     content_layers = ['block4_conv2']

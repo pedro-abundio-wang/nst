@@ -37,15 +37,17 @@ def transfer(content, saved_model_path, tflite_model_path, max_dim, result):
 
         ##################################################
 
-        # Load the TFLite model in TFLite Interpreter
+        # Load TFLite model and allocate tensors.
         interpreter = tf.lite.Interpreter(tflite_model_path)
-        # There is only 1 signature defined in the model,
-        # so it will return it by default.
-        # If there are multiple signatures then we can pass the name.
-        signature = interpreter.get_signature_runner()
+        interpreter.allocate_tensors()
 
-        # signature is callable with input as arguments.
-        image = signature(content_image)
+        # Get input and output tensors.
+        input_index = interpreter.get_input_details()[0]["index"]
+        output_index = interpreter.get_output_details()[0]["index"]
+
+        interpreter.set_tensor(input_index, content_image)
+        interpreter.invoke()
+        image = interpreter.get_tensor(output_index)
 
         # Clip pixel values to 0-255
         image = clip(image)
